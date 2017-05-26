@@ -70,9 +70,9 @@ void flight_control() {
 	// 																 //	should only occur on first engagement since this is 59Hz loop
 	// 	// yaw_desired = yaw; 							// yaw_desired already defined in aa241x_high_aux.h
 	// 	// altitude_desired = position_D_baro; 		// altitude_desired needs to be declared outside flight_control() function
-	// 	high_data.field14 = position_N;
-	// 	high_data.field15 = position_E;
-	// 	high_data.field16 = yaw;
+        // 	high_data.field14 = position_N;
+        // 	high_data.field15 = position_E;
+        // 	high_data.field16 = yaw;
 	// }	
 	// An example of how to run a one time 'setup' for example to lock one's altitude and heading...
 	if (hrt_absolute_time() - previous_loop_timestamp > 500000.0f) { // Run if more than 0.5 seconds have passes since last loop, 
@@ -80,17 +80,17 @@ void flight_control() {
 		// yaw_desired = yaw; 							// yaw_desired already defined in aa241x_high_aux.h
 		// altitude_desired = position_D_baro; 		// altitude_desired needs to be declared outside flight_control() function
         high_data.field14 = position_D_gps;
-        high_data.field15 = yaw;
-        high_data.field16 = position_N * sinf(yaw) - position_E * cosf(yaw);  // line offset parameter
+        //high_data.field15 = yaw;
+        //high_data.field16 = position_N * sinf(yaw) - position_E * cosf(yaw);  // line offset parameter
 	}	
 
 
 	// TODO: write all of your flight control here...
 
-	// float r_N = low_data.field1;
-	// float r_E = low_data.field2;
-	// float q_N = low_data.field3;
-	// float_q_E = low_data.field4;
+         float r_N = low_data.field1;
+         float r_E = low_data.field2;
+         float q_N = low_data.field3;
+         float q_E = low_data.field4;
 
 
 	// extract high params
@@ -105,6 +105,7 @@ void flight_control() {
 	float k_psi = aah_parameters.k_psi; // psi gain
 	float k_y = aah_parameters.k_y; // line follow gain
 	float throt_trim = aah_parameters.throt_trim;
+        float psi_inf = 0.7;
 
 
 
@@ -112,8 +113,8 @@ void flight_control() {
 
 	// Line following logic
     float anchor_h = high_data.field14;
-    float anchor_psi = high_data.field15;
-    float anchor_rho = high_data.field16;
+    //float anchor_psi = high_data.field15;
+    //float anchor_rho = high_data.field16;
 
 
 
@@ -128,8 +129,14 @@ void flight_control() {
 	float rudder = 0.0;
 	float pi = (float)M_PI;
     // line following:
-    float dist = anchor_rho + position_E * cosf(anchor_psi) - position_N * sinf(anchor_psi);
-    float psi_command = atanf(k_y * dist) + anchor_psi;
+
+    //float dist = anchor_rho + position_E * cosf(anchor_psi) - position_N * sinf(anchor_psi);
+
+        float psi_q = atan2f(q_E, q_N);
+        float dist =
+                -sinf(psi_q) * (position_N - r_N) + cosf(psi_q) * (position_E - r_E);
+
+        float psi_command = psi_inf*atanf(k_y * dist) + psi_q;
 	float psi_diff = psi_command - yaw;
 
 	if (psi_diff > pi) {

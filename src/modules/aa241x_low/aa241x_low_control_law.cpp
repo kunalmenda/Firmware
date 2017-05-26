@@ -108,7 +108,7 @@ void low_loop()
 
 	float psi_q = atan2f(q_E,q_N);
 	float dist_from_anchor = 
-		-sinf(psi_q) * (position_N - r_N) + cosf(psi_q) * (position_E - r_E);
+		cosf(psi_q) * (position_N - r_N) + sinf(psi_q) * (position_E - r_E);
 
 	float seg_length = sqrtf( pow(waypoint_Ns[1]-r_N,2) + pow(waypoint_Es[1]-r_E,2) );
 
