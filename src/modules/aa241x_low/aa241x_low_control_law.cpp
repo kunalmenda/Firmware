@@ -30,7 +30,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
-
 /*
  * @file aa241x_low.cpp
  *
@@ -50,6 +49,11 @@
 
 using namespace aa241x_low;
 
+const int num_waypoints = 4;
+float waypoint_Ns [num_waypoints] = {-2450.0f, -2300.0f, -2450.0f, -2200.0f };
+float waypoint_Es [num_waypoints] = {1780.0f, 1780.0f, 1840.0f, 1840.0f};
+float waypoint_Bs [num_waypoints] = {10.0f,10.0f,10.0f,10.0f};
+
 /**
  * Main function in which your code should be written.
  *
@@ -62,14 +66,67 @@ using namespace aa241x_low;
 void low_loop()
 {
 
-	float my_float_variable = 0.0f;		/**< example float variable */
-
+	// float my_float_variable = 0.0f;		/**< example float variable */
 
 	// getting high data value example
 	// float my_high_data = high_data.field1;
 
 	// setting low data value example
-	low_data.field1 = my_float_variable;
+
+	float dist_to_waypoint = 
+		sqrtf(powf(waypoint_Ns[1] - position_N, 2) + 
+			powf(waypoint_Es[1] - position_E, 2));
+
+	if(dist_to_waypoint < waypoint_Bs[1]){
+		float tmp_N = waypoint_Ns[0];
+		float tmp_E = waypoint_Es[0];
+		float tmp_B = waypoint_Bs[0];
+
+
+		for(int i=1;i<num_waypoints;i++){
+			waypoint_Ns[i-1] = waypoint_Ns[i];
+			waypoint_Es[i-1] = waypoint_Es[i];
+			waypoint_Bs[i-1] = waypoint_Bs[i];
+		}
+		waypoint_Ns[num_waypoints-1] = tmp_N;
+		waypoint_Es[num_waypoints-1] = tmp_E;
+		waypoint_Bs[num_waypoints-1] = tmp_B;
+	}
+
+	float r_N = waypoint_Ns[0];
+	float r_E = waypoint_Es[0];
+	float q_N = waypoint_Ns[1] - waypoint_Ns[0];
+	float q_E = waypoint_Es[1] - waypoint_Es[0];
+	float normq = sqrtf( powf(q_N,2) + powf(q_E,2) );
+	q_E /= normq;
+	q_N /= normq;
+
+	low_data.field1 = r_N;
+	low_data.field2 = r_E;
+	low_data.field3 = q_N;
+	low_data.field4 = q_E;
+
+	float psi_q = atan2f(q_E,q_N);
+	float dist_from_anchor = 
+		-sinf(psi_q) * (position_N - r_N) + cosf(psi_q) * (position_E - r_E);
+
+	float seg_length = sqrtf( pow(waypoint_Ns[1]-r_N,2) + pow(waypoint_Es[1]-r_E,2) );
+
+	if(dist_from_anchor > seg_length){ // overshot
+		float tmp_N = waypoint_Ns[0];
+		float tmp_E = waypoint_Es[0];
+		float tmp_B = waypoint_Bs[0];
+
+
+		for(int i=1;i<num_waypoints;i++){
+			waypoint_Ns[i-1] = waypoint_Ns[i];
+			waypoint_Es[i-1] = waypoint_Es[i];
+			waypoint_Bs[i-1] = waypoint_Bs[i];
+		}
+		waypoint_Ns[num_waypoints-1] = tmp_N;
+		waypoint_Es[num_waypoints-1] = tmp_E;
+		waypoint_Bs[num_waypoints-1] = tmp_B;
+	}
 
 
 }

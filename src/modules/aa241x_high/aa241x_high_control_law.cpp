@@ -87,6 +87,11 @@ void flight_control() {
 
 	// TODO: write all of your flight control here...
 
+	// float r_N = low_data.field1;
+	// float r_E = low_data.field2;
+	// float q_N = low_data.field3;
+	// float_q_E = low_data.field4;
+
 
 	// extract high params
         //float h_command = aah_parameters.h_command; // altitude
@@ -177,3 +182,5 @@ void flight_control() {
 	high_data.field13 = throt_trim;
 
 	// fields 14-16 reserved for line follow}
+
+}
