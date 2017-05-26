@@ -62,52 +62,118 @@ float altitude_desired = 0.0f;
  */
 void flight_control() {
 
-	float my_float_variable = 0.0f;		/**< example float variable */
+	// float my_float_variable = 0.0f;		/**< example float variable */
 
 
+	// // An example of how to run a one time 'setup' for example to lock one's altitude and heading...
+	// if (hrt_absolute_time() - previous_loop_timestamp > 500000.0f) { // Run if more than 0.5 seconds have passes since last loop, 
+	// 																 //	should only occur on first engagement since this is 59Hz loop
+	// 	// yaw_desired = yaw; 							// yaw_desired already defined in aa241x_high_aux.h
+	// 	// altitude_desired = position_D_baro; 		// altitude_desired needs to be declared outside flight_control() function
+	// 	high_data.field14 = position_N;
+	// 	high_data.field15 = position_E;
+	// 	high_data.field16 = yaw;
+	// }	
 	// An example of how to run a one time 'setup' for example to lock one's altitude and heading...
 	if (hrt_absolute_time() - previous_loop_timestamp > 500000.0f) { // Run if more than 0.5 seconds have passes since last loop, 
 																	 //	should only occur on first engagement since this is 59Hz loop
-		yaw_desired = yaw; 							// yaw_desired already defined in aa241x_high_aux.h
-		altitude_desired = position_D_baro; 		// altitude_desired needs to be declared outside flight_control() function
-	}
+		// yaw_desired = yaw; 							// yaw_desired already defined in aa241x_high_aux.h
+		// altitude_desired = position_D_baro; 		// altitude_desired needs to be declared outside flight_control() function
+        high_data.field14 = position_D_gps;
+        high_data.field15 = yaw;
+        high_data.field16 = position_N * sinf(yaw) - position_E * cosf(yaw);  // line offset parameter
+	}	
 
 
 	// TODO: write all of your flight control here...
 
 
-	// getting low data value example
-	// float my_low_data = low_data.field1;
+	// extract high params
+        //float h_command = aah_parameters.h_command; // altitude
+	float u_command = aah_parameters.u_command; // velocity
+        //float psi_command = aah_parameters.psi_command; // heading
 
-	// setting high data value example
-	high_data.field1 = my_float_variable;
+	float k_u = aah_parameters.k_u; // throttle gain
+	float k_h = aah_parameters.k_h; // altitude gain
+	float k_theta = aah_parameters.k_theta; // theta gain
+	float k_phi = aah_parameters.k_phi; // phi gain
+	float k_psi = aah_parameters.k_psi; // psi gain
+	float k_y = aah_parameters.k_y; // line follow gain
+	float throt_trim = aah_parameters.throt_trim;
 
 
-	// // Make a really simple proportional roll stabilizer // //
-	//
-	
-	roll_desired = 0.0f; // roll_desired already exists in aa241x_high_aux so no need to repeat float declaration
 
-	// Now use your parameter gain and multiply by the error from desired
-	float proportionalRollCorrection = aah_parameters.proportional_roll_gain * (roll - roll_desired);
+	// float beta = asin(speed_body_v / speed_body_u);
 
-	// Note the use of x.0f, this is important to specify that these are single and not double float values!
+	// Line following logic
+    float anchor_h = high_data.field14;
+    float anchor_psi = high_data.field15;
+    float anchor_rho = high_data.field16;
 
-	// Do bounds checking to keep the roll correction within the -1..1 limits of the servo output
-	if (proportionalRollCorrection > 1.0f) {
-		proportionalRollCorrection = 1.0f;
-	} else if (proportionalRollCorrection < -1.0f ) {
-		proportionalRollCorrection = -1.0f;
-	}
 
-	// ENSURE THAT YOU SET THE SERVO OUTPUTS!!!
-	// outputs should be set to values between -1..1 (except throttle is 0..1)
-	// where zero is no actuation, and -1,1 are full throw in either the + or - directions
+
+	// Elevator and Throttle control
+	float throttle = k_u * (u_command - speed_body_u) + throt_trim;
+    // float theta_command = k_h * (h_command - position_D_gps);
+    float theta_command = k_h * (anchor_h - position_D_gps);
+	theta_command = std::min( std::max( theta_command, -(float)0.35 ), (float)0.35 );
+	float elevator = k_theta * (theta_command - pitch);
+
+	// Rudder and Roll
+	float rudder = 0.0;
+	float pi = (float)M_PI;
+    // line following:
+    float dist = anchor_rho + position_E * cosf(anchor_psi) - position_N * sinf(anchor_psi);
+    float psi_command = atanf(k_y * dist) + anchor_psi;
+	float psi_diff = psi_command - yaw;
+
+	if (psi_diff > pi) {
+		psi_diff -= 2.0f*pi;
+}
+	if (psi_diff < -pi) {
+		psi_diff += 2.0f*pi;
+}
+	float phi_command = k_psi * psi_diff;
+	phi_command = std::min( std::max( phi_command, -0.52f), 0.52f);
+	float aileron = k_phi * (phi_command - roll);
+	// if(psi_diff < -0.0001f || psi_diff > 0.0001f){
+	// 	rudder += -1.0f;
+	// }
+	// float aileron = k_phi * ((float)0. - roll); // will just attempt 0 roll. Change when needed
+
+
+	// Saturation
+	elevator = std::min(std::max((double)elevator,-1.0),1.0);
+	aileron = std::min(std::max((double)aileron,-1.0),1.0);
+	rudder = std::min(std::max((double)rudder,-1.0),1.0);
+	throttle = std::min(std::max((double)throttle,0.0),1.0);
 
 	// Set output of roll servo to the control law output calculated above
-	roll_servo_out = proportionalRollCorrection;		
+	roll_servo_out = aileron;		
 	// as an example, just passing through manual control to everything but roll
-	pitch_servo_out = -man_pitch_in;
-	yaw_servo_out = man_yaw_in;
-	throttle_servo_out = man_throttle_in;
-}
+	pitch_servo_out = elevator;
+	yaw_servo_out = rudder;
+	throttle_servo_out = throttle;
+
+
+	// setting high data value example
+	// high_data.variable_name1 = my_float_variable;
+	// field1 through 16
+	high_data.field1 = elevator;
+	high_data.field2 = aileron;
+	high_data.field3 = rudder;
+	high_data.field4 = throttle;
+	// inputs
+    high_data.field5 = u_command;
+    high_data.field6 = dist;
+	// gains
+	high_data.field7 = k_y; 
+	high_data.field8 = k_u;
+	high_data.field9 = k_h;
+	high_data.field10 = k_theta;
+	high_data.field11 = k_phi;
+	high_data.field12 = k_psi;
+	// trims
+	high_data.field13 = throt_trim;
+
+	// fields 14-16 reserved for line follow}

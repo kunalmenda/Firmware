@@ -64,7 +64,17 @@ struct aah_params {
 	float proportional_roll_gain;
 
 	// TODO: add custom parameter variable names here......
+	float h_command; // altitude 
+	float u_command; // velocity
+	float psi_command; // heading
 
+	float k_u; // throttle gain
+	float k_h; // altitude gain
+	float k_theta; // theta gain
+	float k_phi; // phi gain
+	float k_psi; // psi gain
+	float k_y; // line follow gain
+	float throt_trim; // throttle feed forward
 };
 
 
@@ -83,7 +93,17 @@ struct aah_param_handles {
 	param_t proportional_roll_gain;
 
 	// TODO: add custom parameter variable names here.......
+	param_t h_command;
+	param_t u_command;
+	param_t psi_command;
 
+	param_t k_u;
+	param_t k_h;
+	param_t k_theta;
+	param_t k_phi;
+	param_t k_psi;
+	param_t k_y;
+	param_t throt_trim;
 };
 
 /**
