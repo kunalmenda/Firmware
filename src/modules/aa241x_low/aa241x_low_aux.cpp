@@ -160,6 +160,8 @@ struct mis_params mission_parameters = {};
 
 // TODO: DEFINE FUNCTIONS HERE
 
+
+
 /* EXAMPLE
 void take_picture()
 {
@@ -177,5 +179,6 @@ void take_picture()
 	}
 }
 */
+
 
 }

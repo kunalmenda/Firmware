@@ -64,9 +64,75 @@
  * in multiple different function.
  */
 
+float PI = (float)M_PI;
+
 /*
  * Declare function prototypes here.
  */
+
+struct twoDvec{
+        float x;
+        float y;
+};
+
+twoDvec makeTwoDvec(float, float);
+
+struct Matrix{
+        float x11;
+        float x12;
+        float x21;
+        float x22;
+};
+
+struct dubinsParams{
+        float L;
+        twoDvec cs;
+        int lams;
+        twoDvec ce;
+        int lame;
+        twoDvec z1;
+        twoDvec q1;
+        twoDvec z2;
+        twoDvec z3;
+        twoDvec q3;
+};
+
+struct waypointParams{
+        int flag;
+        twoDvec r;
+        twoDvec q;
+        twoDvec c;
+        float rho;
+        int lam;
+};
+
+struct waypoint{
+        twoDvec xy;
+        float heading;
+};
+
+twoDvec mulMxVec2D(Matrix, twoDvec);
+
+twoDvec addVecs2D(twoDvec, twoDvec);
+
+twoDvec scale2Dvec(float, twoDvec);
+
+twoDvec subVecs2D(twoDvec, twoDvec);
+
+float norm2D(twoDvec);
+
+
+float brk(float);
+
+Matrix R_z(float);
+
+void findDubinsParams( waypoint, waypoint, float, dubinsParams*);
+
+bool inHalfspace(twoDvec, twoDvec, twoDvec);
+
+void followWaypointsDubins(dubinsParams, twoDvec, float, int*, bool*, waypointParams*);
+
+
 
 
 #endif /* AA241X_SLOW_H_ */
