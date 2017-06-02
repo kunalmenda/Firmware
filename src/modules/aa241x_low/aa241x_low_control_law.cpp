@@ -50,8 +50,8 @@
 using namespace aa241x_low;
 
 const int num_waypoints = 4;
-float waypoint_Ns [num_waypoints] = {-2450.0f, -2300.0f, -2450.0f, -2200.0f };
-float waypoint_Es [num_waypoints] = {1780.0f, 1780.0f, 1840.0f, 1840.0f};
+float waypoint_Ns [num_waypoints] = {-2550.0f, -2320.0f, -2500.0f, -2300.0f };
+float waypoint_Es [num_waypoints] = {1840.0f, 1840.0f, 1900.0f, 1900.0f};
 float waypoint_Bs [num_waypoints] = {10.0f,10.0f,10.0f,10.0f};
 
 /**
@@ -72,6 +72,25 @@ void low_loop()
 	// float my_high_data = high_data.field1;
 
 	// setting low data value example
+    float init_time = high_data.field15;
+    float elapsed_time_s = (hrt_absolute_time() - init_time)/1000000.0f;
+
+if (elapsed_time_s  < 60.0f)  {
+       float c_N = -2400.0f;
+       float c_E = 1940.0f;
+       float rho = 20.0f;
+       float lambda = 1.0f;
+       if (elapsed_time_s > 30.0f) {
+           lambda = -1.0f;
+       }
+
+       low_data.field1 = c_N;
+       low_data.field2 = c_E;
+       low_data.field3 = rho;
+       low_data.field4 = lambda;
+       low_data.field5 = 2;
+}
+else{
 
 	float dist_to_waypoint = 
 		sqrtf(powf(waypoint_Ns[1] - position_N, 2) + 
@@ -105,10 +124,11 @@ void low_loop()
 	low_data.field2 = r_E;
 	low_data.field3 = q_N;
 	low_data.field4 = q_E;
+        low_data.field5 = 1;
 
 	float psi_q = atan2f(q_E,q_N);
 	float dist_from_anchor = 
-		cosf(psi_q) * (position_N - r_N) + sinf(psi_q) * (position_E - r_E);
+		-sinf(psi_q) * (position_N - r_N) + cosf(psi_q) * (position_E - r_E);
 
 	float seg_length = sqrtf( pow(waypoint_Ns[1]-r_N,2) + pow(waypoint_Es[1]-r_E,2) );
 
@@ -127,6 +147,6 @@ void low_loop()
 		waypoint_Es[num_waypoints-1] = tmp_E;
 		waypoint_Bs[num_waypoints-1] = tmp_B;
 	}
-
+}
 
 }

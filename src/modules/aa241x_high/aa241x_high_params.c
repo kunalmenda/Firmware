@@ -69,6 +69,8 @@ PARAM_DEFINE_FLOAT(AAH_K_THETA, 1.0f); // elevator
 PARAM_DEFINE_FLOAT(AAH_K_PHI, 1.0f); // aileron
 PARAM_DEFINE_FLOAT(AAH_K_PSI, 1.0f);
 PARAM_DEFINE_FLOAT(AAH_K_Y, 1.0f);
+PARAM_DEFINE_FLOAT(AAH_K_CIRC, 1.0f);
+PARAM_DEFINE_FLOAT(AAH_PSI_INF, 1.0f);
 PARAM_DEFINE_FLOAT(AAH_THROT_TRIM, 0.5f);
 /**
  * This is an example parameter.  The name of the parameter in QGroundControl
@@ -109,6 +111,8 @@ int aah_parameters_init(struct aah_param_handles *h)
 	h->k_phi	= param_find("AAH_K_PHI");
 	h->k_psi	= param_find("AAH_K_PSI");	
 	h->k_y	= param_find("AAH_K_Y");
+	h->k_circ = param_find("AAH_K_CIRC");
+	h->psi_inf = param_find("AAH_PSI_INF");
 	h->throt_trim	= param_find("AAH_THROT_TRIM");
 	return OK;
 }
@@ -131,6 +135,8 @@ int aah_parameters_update(const struct aah_param_handles *h, struct aah_params *
 	param_get(h->k_phi, &(p->k_phi));
 	param_get(h->k_psi, &(p->k_psi));
 	param_get(h->k_y, &(p->k_y));
+	param_get(h->k_circ, &(p->k_circ));
+	param_get(h->psi_inf, &(p->psi_inf));
 	param_get(h->throt_trim, &(p->throt_trim));
 	
 	return OK;
