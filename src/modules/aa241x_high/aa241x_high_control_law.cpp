@@ -80,6 +80,7 @@ void flight_control() {
 		// yaw_desired = yaw; 							// yaw_desired already defined in aa241x_high_aux.h
 		// altitude_desired = position_D_baro; 		// altitude_desired needs to be declared outside flight_control() function
         high_data.field14 = position_D_gps;
+        high_data.field15 = hrt_absolute_time();
         //high_data.field15 = yaw;
         //high_data.field16 = position_N * sinf(yaw) - position_E * cosf(yaw);  // line offset parameter
 	}	
@@ -87,10 +88,11 @@ void flight_control() {
 
 	// TODO: write all of your flight control here...
 
-         float r_N = low_data.field1;
-         float r_E = low_data.field2;
-         float q_N = low_data.field3;
-         float q_E = low_data.field4;
+         float r_N = low_data.field1; // c_N if orbit
+         float r_E = low_data.field2; // c_E if orbit
+         float q_N = low_data.field3; // rho if orbit
+         float q_E = low_data.field4; // lambda if orbit
+         int mode = low_data.field5;
 
 
 	// extract high params
@@ -104,8 +106,9 @@ void flight_control() {
 	float k_phi = aah_parameters.k_phi; // phi gain
 	float k_psi = aah_parameters.k_psi; // psi gain
 	float k_y = aah_parameters.k_y; // line follow gain
+        float k_circ = aah_parameters.k_circ;
 	float throt_trim = aah_parameters.throt_trim;
-        float psi_inf = 0.7;
+        float psi_inf = aah_parameters.psi_inf;
 
 
 
@@ -131,12 +134,22 @@ void flight_control() {
     // line following:
 
     //float dist = anchor_rho + position_E * cosf(anchor_psi) - position_N * sinf(anchor_psi);
+        float psi_command = 0;
+        float dist = 0;
+        if (mode == 2) {
+            float pos_angle = atan2f(position_E-r_E,position_N-r_N);
+            dist = sqrtf( powf(position_N-r_N,2) + powf(position_E-r_E,2) );
+            psi_command = pos_angle + q_E*(pi/(float)2.0 + atanf(k_circ*(dist-q_N)/q_N));
+        }
 
+        else {
         float psi_q = atan2f(q_E, q_N);
-        float dist =
+        dist =
                 -sinf(psi_q) * (position_N - r_N) + cosf(psi_q) * (position_E - r_E);
 
-        float psi_command = psi_inf*atanf(k_y * dist) + psi_q;
+        psi_command = psi_inf*atanf(k_y * dist) + psi_q;
+        }
+
 	float psi_diff = psi_command - yaw;
 
 	if (psi_diff > pi) {
@@ -146,7 +159,7 @@ void flight_control() {
 		psi_diff += 2.0f*pi;
 }
 	float phi_command = k_psi * psi_diff;
-	phi_command = std::min( std::max( phi_command, -0.52f), 0.52f);
+        phi_command = std::min( std::max( phi_command, -0.79f), 0.79f);
 	float aileron = k_phi * (phi_command - roll);
 	// if(psi_diff < -0.0001f || psi_diff > 0.0001f){
 	// 	rudder += -1.0f;

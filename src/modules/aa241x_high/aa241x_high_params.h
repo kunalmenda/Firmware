@@ -74,6 +74,8 @@ struct aah_params {
 	float k_phi; // phi gain
 	float k_psi; // psi gain
 	float k_y; // line follow gain
+	float k_circ;
+	float psi_inf;
 	float throt_trim; // throttle feed forward
 };
 
@@ -103,6 +105,8 @@ struct aah_param_handles {
 	param_t k_phi;
 	param_t k_psi;
 	param_t k_y;
+	param_t k_circ;
+	param_t psi_inf;
 	param_t throt_trim;
 };
 
