@@ -81,7 +81,7 @@ void low_loop()
     float init_time = high_data.field15;
     float elapsed_time_s = (hrt_absolute_time() - init_time)/1000000.0f;
 
-if (elapsed_time_s  < 60.0f)  {
+if (false){ //(elapsed_time_s  < 60.0f)  {
        float c_N = -2400.0f;
        float c_E = 1940.0f;
        float rho = 20.0f;
@@ -143,66 +143,85 @@ else{
 
         }
 
+        if(wpParams.flag == 2){ // orbit
+                low_data.field1 = wpParams.c.x;
+                low_data.field2 = wpParams.c.y;
+                low_data.field3 = R;
+                low_data.field4 = wpParams.lam;
+                low_data.field5 = wpParams.flag;
+
+        }
+        else{
+            low_data.field1 = wpParams.r.x;
+            low_data.field2 = wpParams.r.y;
+            low_data.field3 = wpParams.q.x;
+            low_data.field4 = wpParams.q.y;
+            low_data.field5 = wpParams.flag;
+        }
+
+    }
 
 
-	float dist_to_waypoint = 
-		sqrtf(powf(waypoint_Ns[1] - position_N, 2) + 
-			powf(waypoint_Es[1] - position_E, 2));
-
-	if(dist_to_waypoint < waypoint_Bs[1]){
-		float tmp_N = waypoint_Ns[0];
-		float tmp_E = waypoint_Es[0];
-		float tmp_B = waypoint_Bs[0];
 
 
-		for(int i=1;i<num_waypoints;i++){
-			waypoint_Ns[i-1] = waypoint_Ns[i];
-			waypoint_Es[i-1] = waypoint_Es[i];
-			waypoint_Bs[i-1] = waypoint_Bs[i];
-		}
-		waypoint_Ns[num_waypoints-1] = tmp_N;
-		waypoint_Es[num_waypoints-1] = tmp_E;
-		waypoint_Bs[num_waypoints-1] = tmp_B;
-	}
+	// float dist_to_waypoint = 
+	// 	sqrtf(powf(waypoint_Ns[1] - position_N, 2) + 
+	// 		powf(waypoint_Es[1] - position_E, 2));
 
-	float r_N = waypoint_Ns[0];
-	float r_E = waypoint_Es[0];
-	float q_N = waypoint_Ns[1] - waypoint_Ns[0];
-	float q_E = waypoint_Es[1] - waypoint_Es[0];
-	float normq = sqrtf( powf(q_N,2) + powf(q_E,2) );
-	q_E /= normq;
-	q_N /= normq;
-
-	low_data.field1 = r_N;
-	low_data.field2 = r_E;
-	low_data.field3 = q_N;
-	low_data.field4 = q_E;
-        low_data.field5 = 1;
-
-	float psi_q = atan2f(q_E,q_N);
-	float dist_from_anchor = 
-		-sinf(psi_q) * (position_N - r_N) + cosf(psi_q) * (position_E - r_E);
-
-	float seg_length = sqrtf( pow(waypoint_Ns[1]-r_N,2) + pow(waypoint_Es[1]-r_E,2) );
-
-	if(dist_from_anchor > seg_length){ // overshot
-		float tmp_N = waypoint_Ns[0];
-		float tmp_E = waypoint_Es[0];
-		float tmp_B = waypoint_Bs[0];
+	// if(dist_to_waypoint < waypoint_Bs[1]){
+	// 	float tmp_N = waypoint_Ns[0];
+	// 	float tmp_E = waypoint_Es[0];
+	// 	float tmp_B = waypoint_Bs[0];
 
 
-		for(int i=1;i<num_waypoints;i++){
-			waypoint_Ns[i-1] = waypoint_Ns[i];
-			waypoint_Es[i-1] = waypoint_Es[i];
-			waypoint_Bs[i-1] = waypoint_Bs[i];
-		}
-		waypoint_Ns[num_waypoints-1] = tmp_N;
-		waypoint_Es[num_waypoints-1] = tmp_E;
-		waypoint_Bs[num_waypoints-1] = tmp_B;
-	}
+	// 	for(int i=1;i<num_waypoints;i++){
+	// 		waypoint_Ns[i-1] = waypoint_Ns[i];
+	// 		waypoint_Es[i-1] = waypoint_Es[i];
+	// 		waypoint_Bs[i-1] = waypoint_Bs[i];
+	// 	}
+	// 	waypoint_Ns[num_waypoints-1] = tmp_N;
+	// 	waypoint_Es[num_waypoints-1] = tmp_E;
+	// 	waypoint_Bs[num_waypoints-1] = tmp_B;
+	// }
+
+	// float r_N = waypoint_Ns[0];
+	// float r_E = waypoint_Es[0];
+	// float q_N = waypoint_Ns[1] - waypoint_Ns[0];
+	// float q_E = waypoint_Es[1] - waypoint_Es[0];
+	// float normq = sqrtf( powf(q_N,2) + powf(q_E,2) );
+	// q_E /= normq;
+	// q_N /= normq;
+
+	// low_data.field1 = r_N;
+	// low_data.field2 = r_E;
+	// low_data.field3 = q_N;
+	// low_data.field4 = q_E;
+ //    low_data.field5 = 1;
+
+	// float psi_q = atan2f(q_E,q_N);
+	// float dist_from_anchor = 
+	// 	-sinf(psi_q) * (position_N - r_N) + cosf(psi_q) * (position_E - r_E);
+
+	// float seg_length = sqrtf( pow(waypoint_Ns[1]-r_N,2) + pow(waypoint_Es[1]-r_E,2) );
+
+	// if(dist_from_anchor > seg_length){ // overshot
+	// 	float tmp_N = waypoint_Ns[0];
+	// 	float tmp_E = waypoint_Es[0];
+	// 	float tmp_B = waypoint_Bs[0];
+
+
+	// 	for(int i=1;i<num_waypoints;i++){
+	// 		waypoint_Ns[i-1] = waypoint_Ns[i];
+	// 		waypoint_Es[i-1] = waypoint_Es[i];
+	// 		waypoint_Bs[i-1] = waypoint_Bs[i];
+	// 	}
+	// 	waypoint_Ns[num_waypoints-1] = tmp_N;
+	// 	waypoint_Es[num_waypoints-1] = tmp_E;
+	// 	waypoint_Bs[num_waypoints-1] = tmp_B;
+	// }
 }
 
-}
+
 
 twoDvec makeTwoDvec(float x, float y){
         twoDvec out;
