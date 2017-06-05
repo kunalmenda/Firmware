@@ -125,7 +125,7 @@ void flight_control() {
 	float throttle = k_u * (u_command - speed_body_u) + throt_trim;
     // float theta_command = k_h * (h_command - position_D_gps);
     float theta_command = k_h * (anchor_h - position_D_gps);
-	theta_command = std::min( std::max( theta_command, -(float)0.35 ), (float)0.35 );
+	theta_command = std::min( std::max( theta_command, -(float)0.78 ), (float)0.78 );
 	float elevator = k_theta * (theta_command - pitch);
 
 	// Rudder and Roll

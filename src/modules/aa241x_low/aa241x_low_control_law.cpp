@@ -44,6 +44,8 @@
 // include header file
 #include "aa241x_low_control_law.h"
 #include "aa241x_low_aux.h"
+#include <array>        // array::size
+#include <algorithm>    // std::next_permutation, std::sort
 
 #include <uORB/uORB.h>
 
@@ -84,7 +86,7 @@ void low_loop()
 if (false){ //(elapsed_time_s  < 60.0f)  {
        float c_N = -2400.0f;
        float c_E = 1940.0f;
-       float rho = 20.0f;
+       float rho = 25.0f;
        float lambda = 1.0f;
        if (elapsed_time_s > 30.0f) {
            lambda = -1.0f;
@@ -100,10 +102,10 @@ else{
 
         if (hrt_absolute_time() - previous_loop_timestamp > 500000.0f) { // Run if more than 0.5 seconds have passes since last loop,
             P[0].xy = makeTwoDvec(position_N, position_E);
-            P[1].xy = makeTwoDvec(-2300.0f, 1780.0f);
-            P[2].xy = makeTwoDvec(-2450.0f, 1860.0f);
-            P[3].xy = makeTwoDvec(-2200.0f, 1840.0f);
-            P[4].xy = makeTwoDvec(-2250.0f, 1650.0f);
+            P[1].xy = makeTwoDvec(-2400.0f, 1930.0f);
+            P[2].xy = makeTwoDvec(-2550.0f, 1990.0f);
+            P[3].xy = makeTwoDvec(-2300.0f, 1990.0f);
+            P[4].xy = makeTwoDvec(-2350.0f, 1850.0f);
 
             P[0].heading = yaw;
             twoDvec diff;
@@ -504,3 +506,73 @@ void followWaypointsDubins(dubinsParams dbparams, twoDvec p, float R, int* state
 
 
 }
+
+void applyBestHeadings(waypoint P_[], int n){
+    // n is len(P)
+    twoDvec diff;
+    for(int i=1; i<n-1; i++){
+        diff = subVecs2D( P_[i+1].xy , P_[i-1].xy );
+        P_[i].heading = atan2f(diff.y,diff.x);
+    }
+    diff = subVecs2D(P_[n-1].xy, P_[n-2].xy);
+    P_[n-1].heading = atan2f(diff.y,diff.x);
+}
+
+
+void shortestDubinsPath(waypoint P_[], float R, int n) {
+    // R is turning radius
+    // n is length(P_array)
+  
+  int indicies[n] = {};
+  for (int j = 0; j < n; j++) {
+    indicies[j] = j;  }
+
+  waypoint P_tmp[n];
+  waypoint best_P[n];
+  // as a failsafe copy the original path in
+  for(int i = 1; i<n; i++){
+    best_P[i] = P_[i];
+  }
+
+  float best_P_len = 100000.0f;
+
+  float total_length = 0.0f;
+  dubinsParams dbParams;
+
+  do {
+    total_length = 0.0f;
+    for (int i = 0; i<n; i++){
+        // create permutation of the waypoints
+        P_tmp[i] = P_[indicies[i]];
+        applyBestHeadings(P_tmp, n);
+    }
+    // compute length for each pair and add to total
+    for (int i = 1; i<n; i++){
+        if(norm2D(subVecs2D(P_tmp[i].xy,P_tmp[i-1].xy)) > 3.0f*R){
+            findDubinsParams(P_tmp[i-1], P_tmp[i], R, &dbParams);
+            total_length += dbParams.L;
+        }
+        else{
+            // cannot compute dubins path between waypoints
+            total_length += 10000000.0f;
+        }
+    }
+
+    // cout << "total_len: " << total_length << "\n";
+
+
+    if(total_length < best_P_len){
+        best_P_len = total_length;
+        for(int i = 1; i<n; i++){
+            best_P[i] = P_tmp[i];
+        }
+    }
+
+  } while ( std::next_permutation(indicies+1,indicies+n-1) );
+
+  for(int i = 1; i<n; i++){
+    P_[i] = best_P[i];
+  }
+
+}
+

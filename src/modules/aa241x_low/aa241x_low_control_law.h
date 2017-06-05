@@ -132,6 +132,10 @@ bool inHalfspace(twoDvec, twoDvec, twoDvec);
 
 void followWaypointsDubins(dubinsParams, twoDvec, float, int*, bool*, waypointParams*);
 
+void applyBestHeadings(waypoint [], int);
+
+void shortestDubinsPath(waypoint [], float, int);
+
 
 
 

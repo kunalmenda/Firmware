@@ -60,18 +60,18 @@
  * @group AA241x High Params		(always include this)
  */
 PARAM_DEFINE_FLOAT(AAH_EXAMPLE_1, 10.0f);
-PARAM_DEFINE_FLOAT(AAH_H_COMMAND, -60.0f); //Neg height above ground (m), adjust as needed
-PARAM_DEFINE_FLOAT(AAH_U_COMMAND, 10.0f); //velocity
+PARAM_DEFINE_FLOAT(AAH_H_COMMAND, -80.0f); //Neg height above ground (m), adjust as needed
+PARAM_DEFINE_FLOAT(AAH_U_COMMAND, 15.0f); //velocity
 PARAM_DEFINE_FLOAT(AAH_PSI_COMMAND, 0.0f); //yaw
-PARAM_DEFINE_FLOAT(AAH_K_U, 1.0f); // velocity (throttle)
-PARAM_DEFINE_FLOAT(AAH_K_H, 1.0f); // altitude
-PARAM_DEFINE_FLOAT(AAH_K_THETA, 1.0f); // elevator
-PARAM_DEFINE_FLOAT(AAH_K_PHI, 1.0f); // aileron
+PARAM_DEFINE_FLOAT(AAH_K_U, 0.6f); // velocity (throttle)
+PARAM_DEFINE_FLOAT(AAH_K_H, -0.2f); // altitude
+PARAM_DEFINE_FLOAT(AAH_K_THETA, 4.0f); // elevator
+PARAM_DEFINE_FLOAT(AAH_K_PHI, -2.0f); // aileron
 PARAM_DEFINE_FLOAT(AAH_K_PSI, 1.0f);
 PARAM_DEFINE_FLOAT(AAH_K_Y, 1.0f);
 PARAM_DEFINE_FLOAT(AAH_K_CIRC, 1.0f);
-PARAM_DEFINE_FLOAT(AAH_PSI_INF, 1.0f);
-PARAM_DEFINE_FLOAT(AAH_THROT_TRIM, 0.5f);
+PARAM_DEFINE_FLOAT(AAH_PSI_INF, 0.7f);
+PARAM_DEFINE_FLOAT(AAH_THROT_TRIM, 0.6f);
 /**
  * This is an example parameter.  The name of the parameter in QGroundControl
  * will be AAH_PROPROLLGAIN and will be in the AAH dropdown.  Make sure to always
