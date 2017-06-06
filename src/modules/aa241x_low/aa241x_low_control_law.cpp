@@ -51,16 +51,19 @@
 
 using namespace aa241x_low;
 
-const int num_waypoints = 4;
-float waypoint_Ns [num_waypoints] = {-2550.0f, -2320.0f, -2500.0f, -2300.0f };
-float waypoint_Es [num_waypoints] = {1840.0f, 1840.0f, 1900.0f, 1900.0f};
-float waypoint_Bs [num_waypoints] = {10.0f,10.0f,10.0f,10.0f};
+//const int num_waypoints = 4;
+//float waypoint_Ns [num_waypoints] = {-2550.0f, -2320.0f, -2500.0f, -2300.0f };
+//float waypoint_Es [num_waypoints] = {1840.0f, 1840.0f, 1900.0f, 1900.0f};
+//float waypoint_Bs [num_waypoints] = {10.0f,10.0f,10.0f,10.0f};
 
-int P_ind = 2;
+int P_ind = 1;
 int follow_state = 1;
 bool follow_done = false;
+bool path_done = false;
+const int num_waypoints = 6;
 
-waypoint P[5];
+
+waypoint P[num_waypoints];
 
 /**
  * Main function in which your code should be written.
@@ -100,30 +103,36 @@ if (false){ //(elapsed_time_s  < 60.0f)  {
 }
 else{
 
-        if (hrt_absolute_time() - previous_loop_timestamp > 500000.0f) { // Run if more than 0.5 seconds have passes since last loop,
+        float R = 20;
+
+        if (hrt_absolute_time() - previous_loop_timestamp > 1000000.0f) { // Run if more than 1.0 seconds have passes since last loop,
+            // set a heading hold for until computation finishes
+            low_data.field1 = position_N;
+            low_data.field2 = position_E;
+            low_data.field3 = cosf(yaw);
+            low_data.field4 = sinf(yaw);
+            low_data.field5 = 1;
+
+            // set up nominal waypoints
             P[0].xy = makeTwoDvec(position_N, position_E);
             P[1].xy = makeTwoDvec(-2400.0f, 1930.0f);
             P[2].xy = makeTwoDvec(-2550.0f, 1990.0f);
             P[3].xy = makeTwoDvec(-2300.0f, 1990.0f);
             P[4].xy = makeTwoDvec(-2350.0f, 1850.0f);
+            P[5].xy = makeTwoDvec(position_N, position_E);
 
             P[0].heading = yaw;
-            twoDvec diff;
-            for(int i=1; i<4; i++){
-                diff = subVecs2D( P[i+1].xy , P[i-1].xy );
-                P[i].heading = atan2f(diff.y,diff.x);
-            }
-            diff = subVecs2D(P[4].xy, P[3].xy);
-            P[4].heading = atan2f(diff.y,diff.x);
+            applyBestHeadings(P,num_waypoints);
 
-            P_ind = 2;
+            // reorder waypoints for shortest path length
+            shortestDubinsPath(P,R,num_waypoints);
+
+            P_ind = 1;
             follow_state = 1;
+            follow_done = false;
+            path_done = false;
 
         }
-
-
-
-        float R = 15;
 
         dubinsParams dbParams;
         findDubinsParams(P[P_ind-1],P[P_ind],R,&dbParams);
@@ -136,21 +145,31 @@ else{
         if(follow_done){
             follow_done = false;
             P_ind++;
-            if(P_ind > 5){
-                P_ind = 2;
-                P[0].xy = makeTwoDvec(position_N, position_E);
-                P[0].heading = yaw;
-                follow_state = 1;
+            if(P_ind >= num_waypoints){
+                path_done = true;
+//                P_ind = 1;
+//                P[0].xy = makeTwoDvec(position_N, position_E);
+//                P[0].heading = yaw;
+//                follow_state = 1;
             }
 
         }
 
-        if(wpParams.flag == 2){ // orbit
-                low_data.field1 = wpParams.c.x;
-                low_data.field2 = wpParams.c.y;
-                low_data.field3 = R;
-                low_data.field4 = wpParams.lam;
-                low_data.field5 = wpParams.flag;
+        if(path_done){
+            // loiter
+            low_data.field1 = P[num_waypoints-1].xy.x;
+            low_data.field2 = P[num_waypoints-1].xy.x;
+            low_data.field3 = R;
+            low_data.field4 = 1;
+            low_data.field5 = 2;
+        }
+
+        else if(wpParams.flag == 2){ // orbit
+            low_data.field1 = wpParams.c.x;
+            low_data.field2 = wpParams.c.y;
+            low_data.field3 = R;
+            low_data.field4 = wpParams.lam;
+            low_data.field5 = wpParams.flag;
 
         }
         else{
@@ -317,20 +336,33 @@ void findDubinsParams( waypoint S, waypoint E, float R, dubinsParams* output ){
         line = subVecs2D(cle, crs);
         v = atan2f(line.y, line.x);
         float l = norm2D(line);
-        float v2 = v - PI/2.0f + asinf(2.0f*R/l);
-        float L2 = sqrtf(powf(l,2) - 4.0f*powf(R,2)) +
-                R * brk(2.0f*PI + brk(v2) - brk(psis - PI/2.0f)) +
-                R * brk(2.0f*PI + brk(v2 + PI) - brk(psie + PI/2.0f));
+        float L2;
+        float v2;
+        if(2.0f*R < l){
+            v2 = v - PI/2.0f + asinf(2.0f*R/l);
+            L2 = sqrtf(powf(l,2) - 4.0f*powf(R,2)) +
+                    R * brk(2.0f*PI + brk(v2) - brk(psis - PI/2.0f)) +
+                    R * brk(2.0f*PI + brk(v2 + PI) - brk(psie + PI/2.0f));
+        }
+        else{
+            L2 = 1000000.0f;
+        }
 
 
         // Compute L3
         line = subVecs2D(cre, cls);
         v = atan2f(line.y, line.x);
         l = norm2D(line);
-        v2 = acosf(2.0f*R/l);
-        float L3 = sqrtf(powf(l,2) - 4.0f*powf(R,2)) +
-                R * brk(2.0f*PI + brk(psis + PI/2.0f) - brk(v+v2)) +
-                R * brk(2.0f*PI + brk(psie - PI/2.0f) - brk(v+v2 -  PI));
+        float L3;
+        if(2.0f*R < l){
+            v2 = acosf(2.0f*R/l);
+            L3 = sqrtf(powf(l,2) - 4.0f*powf(R,2)) +
+                    R * brk(2.0f*PI + brk(psis + PI/2.0f) - brk(v+v2)) +
+                    R * brk(2.0f*PI + brk(psie - PI/2.0f) - brk(v+v2 -  PI));
+        }
+        else{
+            L3 = 1000000.0f;
+        }
 
 
         // Compute L4
@@ -548,7 +580,7 @@ void shortestDubinsPath(waypoint P_[], float R, int n) {
     }
     // compute length for each pair and add to total
     for (int i = 1; i<n; i++){
-        if(norm2D(subVecs2D(P_tmp[i].xy,P_tmp[i-1].xy)) > 3.0f*R){
+        if(true){ // norm2D(subVecs2D(P_tmp[i].xy,P_tmp[i-1].xy)) > 3.0f*R){
             findDubinsParams(P_tmp[i-1], P_tmp[i], R, &dbParams);
             total_length += dbParams.L;
         }
