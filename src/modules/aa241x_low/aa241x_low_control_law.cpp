@@ -148,7 +148,7 @@ void low_loop()
         mission_done = false;
 
     }
-    else if( (int)((hrt_absolute_time() - miss_start_time)/30.0f) > mission_ctr ){
+    else if( (int)((hrt_absolute_time() - miss_start_time)/ (30.0f*1000000.0f) ) > mission_ctr ){
         // if 30 seconds have passed, move to the next mission
         mission_ctr++;
 
@@ -217,7 +217,7 @@ void low_loop()
     if(path_done || mission_done){
         // loiter
         low_data.field1 = P[num_waypoints+1].xy.x;
-        low_data.field2 = P[num_waypoints+1].xy.x;
+        low_data.field2 = P[num_waypoints+1].xy.y;
         low_data.field3 = R;
         low_data.field4 = 1;
         low_data.field5 = 2;
@@ -238,6 +238,17 @@ void low_loop()
         low_data.field4 = wpParams.q.y;
         low_data.field5 = wpParams.flag;
     }
+
+    low_data.field6 = P_ind;
+    low_data.field7 = mission_ctr;
+    low_data.field8 = path_done;
+    low_data.field9 = follow_done;
+    low_data.field10 = mission_done;
+    low_data.field11 = follow_state;
+    low_data.field12 = P[P_ind].xy.x;
+    low_data.field13 = P[P_ind].xy.y;
+
+
 
    
 }
@@ -562,7 +573,7 @@ void shortestDubinsPath(waypoint P_[], float R, int n) {
   waypoint P_tmp[n];
   waypoint best_P[n];
   // as a failsafe copy the original path in
-  for(int i = 1; i<n; i++){
+  for(int i = 0; i<n; i++){
     best_P[i] = P_[i];
   }
 
@@ -576,8 +587,8 @@ void shortestDubinsPath(waypoint P_[], float R, int n) {
     for (int i = 0; i<n; i++){
         // create permutation of the waypoints
         P_tmp[i] = P_[indicies[i]];
-        applyBestHeadings(P_tmp, n);
     }
+    applyBestHeadings(P_tmp, n);
     // compute length for each pair and add to total
     for (int i = 1; i<n; i++){
         if(true){ // norm2D(subVecs2D(P_tmp[i].xy,P_tmp[i-1].xy)) > 3.0f*R){
@@ -602,7 +613,7 @@ void shortestDubinsPath(waypoint P_[], float R, int n) {
 
   } while ( std::next_permutation(indicies+1,indicies+n-1) );
 
-  for(int i = 1; i<n; i++){
+  for(int i = 0; i<n; i++){
     P_[i] = best_P[i];
   }
 
