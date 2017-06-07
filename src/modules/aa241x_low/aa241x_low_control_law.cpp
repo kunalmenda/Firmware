@@ -77,6 +77,7 @@ float mission_R [3][5] = {{1.0f,1.0f,1.0f,-1.0f,-1.0f},
 int mission_ctr = 0;
 
 waypoint* P;
+int num_waypoints = 0;
 
 
 uint64_t miss_start_time;
@@ -104,8 +105,6 @@ void low_loop()
     // float elapsed_time_s = (hrt_absolute_time() - init_time)/1000000.0f;
 
     float R = 22.5;
-
-    int num_waypoints = 0;
 
     if (hrt_absolute_time() - previous_loop_timestamp > 1000000.0f) { // Run if more than 1.0 seconds have passes since last loop,
         // set start time
