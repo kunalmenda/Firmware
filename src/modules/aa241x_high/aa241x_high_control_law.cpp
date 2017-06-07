@@ -125,7 +125,7 @@ void flight_control() {
 	float throttle = k_u * (u_command - speed_body_u) + throt_trim;
     // float theta_command = k_h * (h_command - position_D_gps);
     float theta_command = k_h * (anchor_h - position_D_gps);
-	theta_command = std::min( std::max( theta_command, -(float)1.05 ), (float)1.05 );
+	theta_command = std::min( std::max( theta_command, -(float)0.35 ), (float)0.35 );
 	float elevator = k_theta * (theta_command - pitch);
 
 	// Rudder and Roll
@@ -159,7 +159,7 @@ void flight_control() {
 		psi_diff += 2.0f*pi;
 }
 	float phi_command = k_psi * psi_diff;
-        phi_command = std::min( std::max( phi_command, -0.79f), 0.79f);
+        phi_command = std::min( std::max( phi_command, -1.05f), 1.05f);
 	float aileron = k_phi * (phi_command - roll);
 	// if(psi_diff < -0.0001f || psi_diff > 0.0001f){
 	// 	rudder += -1.0f;

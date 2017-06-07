@@ -100,34 +100,61 @@ void low_loop()
 	// float my_high_data = high_data.field1;
 
 	// setting low data value example
-    float init_time = high_data.field15;
-    float elapsed_time_s = (hrt_absolute_time() - init_time)/1000000.0f;
+    // float init_time = high_data.field15;
+    // float elapsed_time_s = (hrt_absolute_time() - init_time)/1000000.0f;
 
-if (false){ //(elapsed_time_s  < 60.0f)  {
-       float c_N = -2400.0f;
-       float c_E = 1940.0f;
-       float rho = 25.0f;
-       float lambda = 1.0f;
-       if (elapsed_time_s > 30.0f) {
-           lambda = -1.0f;
-       }
+    float R = 22.5;
 
-       low_data.field1 = c_N;
-       low_data.field2 = c_E;
-       low_data.field3 = rho;
-       low_data.field4 = lambda;
-       low_data.field5 = 2;
-}
-else{
+    int num_waypoints = 0;
 
-        float R = 22.5;
+    if (hrt_absolute_time() - previous_loop_timestamp > 1000000.0f) { // Run if more than 1.0 seconds have passes since last loop,
+        // set start time
+        miss_start_time = hrt_absolute_time();
+        mission_ctr = 0;
 
-        int num_waypoints = 0;
+        // set a heading hold for until computation finishes
+        low_data.field1 = position_N;
+        low_data.field2 = position_E;
+        low_data.field3 = cosf(yaw);
+        low_data.field4 = sinf(yaw);
+        low_data.field5 = 1;
 
-        if (hrt_absolute_time() - previous_loop_timestamp > 1000000.0f) { // Run if more than 1.0 seconds have passes since last loop,
-            // set start time
-            miss_start_time = hrt_absolute_time();
-            mission_ctr = 0;
+        // init mission
+        num_waypoints = 0;
+        for(int i=0;i<5;i++){
+            if(mission_R[mission_ctr][i] > 0.0f) num_waypoints++;
+            else break;
+        }
+        P = new waypoint[num_waypoints+2];
+
+
+        // set up waypoints
+        P[0].xy = makeTwoDvec(position_N, position_E);
+        for(int i=0; i<num_waypoints; i++){
+            P[i+1].xy = makeTwoDvec(mission_N[mission_ctr][i],mission_E[mission_ctr][i]);
+        }
+
+        P[num_waypoints+1].xy = makeTwoDvec(10.0f, -60.0f); // loiter location 
+
+        P[0].heading = yaw;
+        applyBestHeadings(P,num_waypoints+2);
+
+        // reorder waypoints for shortest path length
+        shortestDubinsPath(P,R,num_waypoints+2);
+
+        P_ind = 1;
+        follow_state = 1;
+        follow_done = false;
+        path_done = false;
+        mission_done = false;
+
+    }
+    else if( (int)((hrt_absolute_time() - miss_start_time)/30.0f) > mission_ctr ){
+        // if 30 seconds have passed, move to the next mission
+        mission_ctr++;
+
+        if(mission_ctr<3){
+            // missions remaining
 
             // set a heading hold for until computation finishes
             low_data.field1 = position_N;
@@ -150,10 +177,6 @@ else{
             for(int i=0; i<num_waypoints; i++){
                 P[i+1].xy = makeTwoDvec(mission_N[mission_ctr][i],mission_E[mission_ctr][i]);
             }
-//            P[1].xy = makeTwoDvec(-2400.0f, 1930.0f);
-//            P[2].xy = makeTwoDvec(-2550.0f, 1990.0f);
-//            P[3].xy = makeTwoDvec(-2300.0f, 1990.0f);
-//            P[4].xy = makeTwoDvec(-2350.0f, 1850.0f);
             P[num_waypoints+1].xy = makeTwoDvec(10.0f, -60.0f);
 
             P[0].heading = yaw;
@@ -166,156 +189,58 @@ else{
             follow_state = 1;
             follow_done = false;
             path_done = false;
-            mission_done = false;
-
-        }
-        else if( (int)((hrt_absolute_time() - miss_start_time)/30.0f) > mission_ctr ){
-            mission_ctr++;
-
-            if(mission_ctr<3){
-
-                // set a heading hold for until computation finishes
-                low_data.field1 = position_N;
-                low_data.field2 = position_E;
-                low_data.field3 = cosf(yaw);
-                low_data.field4 = sinf(yaw);
-                low_data.field5 = 1;
-
-                // init mission
-                num_waypoints = 0;
-                for(int i=0;i<5;i++){
-                    if(mission_R[mission_ctr][i] > 0.0f) num_waypoints++;
-                    else break;
-                }
-                P = new waypoint[num_waypoints+2];
-
-
-                // set up nominal waypoints
-                P[0].xy = makeTwoDvec(position_N, position_E);
-                for(int i=0; i<num_waypoints; i++){
-                    P[i+1].xy = makeTwoDvec(mission_N[mission_ctr][i],mission_E[mission_ctr][i]);
-                }
-                P[num_waypoints+1].xy = makeTwoDvec(10.0f, -60.0f);
-
-                P[0].heading = yaw;
-                applyBestHeadings(P,num_waypoints+2);
-
-                // reorder waypoints for shortest path length
-                shortestDubinsPath(P,R,num_waypoints+2);
-
-                P_ind = 1;
-                follow_state = 1;
-                follow_done = false;
-                path_done = false;
-            }
-            else{
-                mission_done = true;
-            }
-
-        }
-
-        dubinsParams dbParams;
-        findDubinsParams(P[P_ind-1],P[P_ind],R,&dbParams);
-
-        twoDvec pos = makeTwoDvec(position_N, position_E);
-
-        waypointParams wpParams;
-        followWaypointsDubins(dbParams, pos, R, &follow_state, &follow_done, &wpParams);
-
-        if(follow_done){
-            follow_done = false;
-            P_ind++;
-            if(P_ind >= num_waypoints+2){
-                path_done = true;
-            }
-
-        }
-
-        if(path_done || mission_done){
-            // loiter
-            low_data.field1 = P[num_waypoints+1].xy.x;
-            low_data.field2 = P[num_waypoints+1].xy.x;
-            low_data.field3 = R;
-            low_data.field4 = 1;
-            low_data.field5 = 2;
-        }
-
-        else if(wpParams.flag == 2){ // orbit
-            low_data.field1 = wpParams.c.x;
-            low_data.field2 = wpParams.c.y;
-            low_data.field3 = R;
-            low_data.field4 = wpParams.lam;
-            low_data.field5 = wpParams.flag;
-
         }
         else{
-            low_data.field1 = wpParams.r.x;
-            low_data.field2 = wpParams.r.y;
-            low_data.field3 = wpParams.q.x;
-            low_data.field4 = wpParams.q.y;
-            low_data.field5 = wpParams.flag;
+            // no missions remaining
+            mission_done = true;
         }
 
     }
 
+    dubinsParams dbParams;
+    waypointParams wpParams;
+    if(!mission_done){
+        
+        findDubinsParams(P[P_ind-1],P[P_ind],R,&dbParams);
+        twoDvec pos = makeTwoDvec(position_N, position_E);
+        followWaypointsDubins(dbParams, pos, R, &follow_state, &follow_done, &wpParams);
+    }
 
+    if(follow_done){
+        follow_done = false;
+        P_ind++;
+        if(P_ind > num_waypoints+1){
+            path_done = true;
+        }
 
+    }
 
-	// float dist_to_waypoint = 
-	// 	sqrtf(powf(waypoint_Ns[1] - position_N, 2) + 
-	// 		powf(waypoint_Es[1] - position_E, 2));
+    if(path_done || mission_done){
+        // loiter
+        low_data.field1 = P[num_waypoints+1].xy.x;
+        low_data.field2 = P[num_waypoints+1].xy.x;
+        low_data.field3 = R;
+        low_data.field4 = 1;
+        low_data.field5 = 2;
+    }
 
-	// if(dist_to_waypoint < waypoint_Bs[1]){
-	// 	float tmp_N = waypoint_Ns[0];
-	// 	float tmp_E = waypoint_Es[0];
-	// 	float tmp_B = waypoint_Bs[0];
+    else if(wpParams.flag == 2){ // orbit
+        low_data.field1 = wpParams.c.x;
+        low_data.field2 = wpParams.c.y;
+        low_data.field3 = R;
+        low_data.field4 = wpParams.lam;
+        low_data.field5 = wpParams.flag;
 
+    }
+    else{ // line follow
+        low_data.field1 = wpParams.r.x;
+        low_data.field2 = wpParams.r.y;
+        low_data.field3 = wpParams.q.x;
+        low_data.field4 = wpParams.q.y;
+        low_data.field5 = wpParams.flag;
+    }
 
-	// 	for(int i=1;i<num_waypoints;i++){
-	// 		waypoint_Ns[i-1] = waypoint_Ns[i];
-	// 		waypoint_Es[i-1] = waypoint_Es[i];
-	// 		waypoint_Bs[i-1] = waypoint_Bs[i];
-	// 	}
-	// 	waypoint_Ns[num_waypoints-1] = tmp_N;
-	// 	waypoint_Es[num_waypoints-1] = tmp_E;
-	// 	waypoint_Bs[num_waypoints-1] = tmp_B;
-	// }
-
-	// float r_N = waypoint_Ns[0];
-	// float r_E = waypoint_Es[0];
-	// float q_N = waypoint_Ns[1] - waypoint_Ns[0];
-	// float q_E = waypoint_Es[1] - waypoint_Es[0];
-	// float normq = sqrtf( powf(q_N,2) + powf(q_E,2) );
-	// q_E /= normq;
-	// q_N /= normq;
-
-	// low_data.field1 = r_N;
-	// low_data.field2 = r_E;
-	// low_data.field3 = q_N;
-	// low_data.field4 = q_E;
- //    low_data.field5 = 1;
-
-	// float psi_q = atan2f(q_E,q_N);
-	// float dist_from_anchor = 
-	// 	-sinf(psi_q) * (position_N - r_N) + cosf(psi_q) * (position_E - r_E);
-
-	// float seg_length = sqrtf( pow(waypoint_Ns[1]-r_N,2) + pow(waypoint_Es[1]-r_E,2) );
-
-	// if(dist_from_anchor > seg_length){ // overshot
-	// 	float tmp_N = waypoint_Ns[0];
-	// 	float tmp_E = waypoint_Es[0];
-	// 	float tmp_B = waypoint_Bs[0];
-
-
-	// 	for(int i=1;i<num_waypoints;i++){
-	// 		waypoint_Ns[i-1] = waypoint_Ns[i];
-	// 		waypoint_Es[i-1] = waypoint_Es[i];
-	// 		waypoint_Bs[i-1] = waypoint_Bs[i];
-	// 	}
-	// 	waypoint_Ns[num_waypoints-1] = tmp_N;
-	// 	waypoint_Es[num_waypoints-1] = tmp_E;
-	// 	waypoint_Bs[num_waypoints-1] = tmp_B;
-	// }
+   
 }
 
 
