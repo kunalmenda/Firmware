@@ -338,7 +338,7 @@ void findDubinsParams( waypoint S, waypoint E, float R, dubinsParams* output ){
         R * brk(2.0f*PI + brk(psie - PI/2.0f) - brk(v - PI/2.0f));
 
     if(cre_oob || crs_oob){
-        L1 = 1000000.0f;
+        L1 = L1*10000.0f;
     }
 
 
@@ -359,7 +359,7 @@ void findDubinsParams( waypoint S, waypoint E, float R, dubinsParams* output ){
     }
 
     if(cle_oob || crs_oob){
-        L2 = 1000000.0f;
+        L2 = L2*10000.0f;
     }
 
 
@@ -380,7 +380,7 @@ void findDubinsParams( waypoint S, waypoint E, float R, dubinsParams* output ){
 
 
     if(cre_oob || cls_oob){
-        L3 = 1000000.0f;
+        L3 = L3*10000.0f;
     }
 
 
@@ -393,7 +393,7 @@ void findDubinsParams( waypoint S, waypoint E, float R, dubinsParams* output ){
         R * brk(2.0f*PI + brk(v + PI/2.0f) - brk(psie + PI/2.0f));
 
     if(cle_oob || cls_oob ){
-        L4 = 1000000.f;
+        L4 = L4*10000.f;
     }
 
 
@@ -590,7 +590,7 @@ void shortestDubinsPath(waypoint P_[], float R, int n, float vel) {
     best_P[i] = P_[i];
   }
 
-  float best_P_len = 100000.0f;
+  float best_P_len = 1000000.0f;
   int best_P_num_waypoints_hit = 0;
 
   float total_length = 0.0f;
