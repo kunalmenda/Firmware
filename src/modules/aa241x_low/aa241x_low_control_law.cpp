@@ -74,10 +74,14 @@ float mission_R [3][5] = {{1.0f,1.0f,1.0f,-1.0f,-1.0f},
                           {1.0f,1.0f,1.0f,1.0f,1.0f},
                           {1.0f,1.0f,1.0f,1.0f,-1.0f}};
 
-twoDvec q_boundaries[4] = { makeTwoDvec(-0.9964f, 0.0850f), makeTwoDvec(-0.0848f, -0.9964f), 
-    makeTwoDvec(0.9964f,   -0.0850f), makeTwoDvec(0.0848f,    0.9964f) };
-twoDvec z_boundaries[4] = { makeTwoDvec( -203.4000f,  -42.9000f), makeTwoDvec(0.7500f, -120.5000f),
-    makeTwoDvec(215.1000f,  -78.5000f), makeTwoDvec(10.9500f,   -0.9000f) };
+// twoDvec q_boundaries[4] = { makeTwoDvec(-0.9964f, 0.0850f), makeTwoDvec(-0.0848f, -0.9964f), 
+//     makeTwoDvec(0.9964f,   -0.0850f), makeTwoDvec(0.0848f,    0.9964f) };
+// twoDvec z_boundaries[4] = { makeTwoDvec( -203.4000f,  -42.9000f), makeTwoDvec(0.7500f, -120.5000f),
+//     makeTwoDvec(215.1000f,  -78.5000f), makeTwoDvec(10.9500f,   -0.9000f) };
+twoDvec q_boundaries[4] = { makeTwoDvec(-1.0f, 0.0f), makeTwoDvec(0.0f, -1.0f), 
+    makeTwoDvec(0.0f,   1.0f), makeTwoDvec(1.0f,    0.0f) };
+twoDvec z_boundaries[4] = { makeTwoDvec( -110.0f,  0.0f), makeTwoDvec(0.0f, -110.0f),
+    makeTwoDvec(0.0f,  110.0f), makeTwoDvec(110.0f,   0.0f) };
 
 int mission_ctr = 0;
 
