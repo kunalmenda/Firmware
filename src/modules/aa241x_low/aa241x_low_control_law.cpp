@@ -324,10 +324,10 @@ void findDubinsParams( waypoint S, waypoint E, float R, dubinsParams* output ){
                     mulMxVec2D(R_z(-PI/2.0f),
                             makeTwoDvec(cosf(psie),sinf(psie) ) )));
 
-    bool crs_oob = circleOutOfAnyBounds(crs,R);
-    bool cls_oob = circleOutOfAnyBounds(cls,R);
-    bool cre_oob = circleOutOfAnyBounds(cre,R);
-    bool cle_oob = circleOutOfAnyBounds(cle,R);
+    bool crs_oob = circleOutOfAnyBounds(crs,R+3.0f);
+    bool cls_oob = circleOutOfAnyBounds(cls,R+3.0f);
+    bool cre_oob = circleOutOfAnyBounds(cre,R+3.0f);
+    bool cle_oob = circleOutOfAnyBounds(cle,R+3.0f);
 
     // Compute L1
     twoDvec line = subVecs2D(cre, crs);
