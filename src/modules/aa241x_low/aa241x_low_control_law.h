@@ -121,10 +121,15 @@ twoDvec subVecs2D(twoDvec, twoDvec);
 
 float norm2D(twoDvec);
 
+float dot2D(twoDvec, twoDvec);
 
 float brk(float);
 
 Matrix R_z(float);
+
+bool circleOutOfBounds( twoDvec, twoDvec, twoDvec, float );
+
+bool circleOutOfAnyBounds(twoDvec, float);
 
 void findDubinsParams( waypoint, waypoint, float, dubinsParams*);
 
@@ -134,7 +139,7 @@ void followWaypointsDubins(dubinsParams, twoDvec, float, int*, bool*, waypointPa
 
 void applyBestHeadings(waypoint [], int);
 
-void shortestDubinsPath(waypoint [], float, int);
+void shortestDubinsPath(waypoint [], float, int, float);
 
 
 

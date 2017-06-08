@@ -115,7 +115,8 @@ void flight_control() {
 	// float beta = asin(speed_body_v / speed_body_u);
 
 	// Line following logic
-    float anchor_h = high_data.field14;
+    // float anchor_h = high_data.field14;
+    float anchor_h = -75.0f;
     //float anchor_psi = high_data.field15;
     //float anchor_rho = high_data.field16;
 
@@ -189,7 +190,7 @@ void flight_control() {
 	high_data.field3 = rudder;
 	high_data.field4 = throttle;
 	// inputs
-    high_data.field5 = u_command;
+    high_data.field5 = u_command; // DO NOT EVER CHANGE THIS
     high_data.field6 = dist;
 	// gains
 	high_data.field7 = k_y; 
