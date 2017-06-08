@@ -60,6 +60,8 @@
  * @group AA241x Low Params			(always include this)
  */
 PARAM_DEFINE_FLOAT(AAL_EXAMPLE, 10.0f);
+PARAM_DEFINE_FLOAT(AAL_TURNRADIUS, 15.0f);
+PARAM_DEFINE_FLOAT(AAL_BOUNDMARG, 5.0f);
 
 // TODO: define custom parameters here
 
@@ -76,6 +78,8 @@ int aal_parameters_init(struct aal_param_handles *h)
 	 * in the above PARAM_DEFINE_FLOAT
 	 */
 	h->example_low_param	=	param_find("AAL_EXAMPLE");
+	h->turn_radius = param_find("AAL_TURNRADIUS");
+	h->boundary_margin = param_find("AAL_BOUNDMARG");
 
 	// TODO: add the above line for each of your custom parameters........
 
@@ -91,7 +95,9 @@ int aal_parameters_update(const struct aal_param_handles *h, struct aal_params *
 	// the corresponding variable name
 	param_get(h->example_low_param, &(p->example_low_param));
 
-	// TODO: add the above line for each of your custom parameters.....
+	// TODO: add the above line for each of your custom parameters....
+	param_get(h->turn_radius, &(p->turn_radius));
+	param_get(h->boundary_margin, &(p->boundary_margin));
 
 	return OK;
 }

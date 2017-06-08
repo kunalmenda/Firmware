@@ -61,7 +61,8 @@ struct aal_params {
 	float example_low_param;
 
 	// TODO: add custom parameter variable names here......
-
+	float turn_radius;
+	float boundary_margin;
 };
 
 
@@ -77,6 +78,8 @@ struct aal_params {
 struct aal_param_handles {
 
 	param_t example_low_param;
+	param_t turn_radius;
+	param_t boundary_margin;
 
 	// TODO: add custom parameter variable names here.......
 

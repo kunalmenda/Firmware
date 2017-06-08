@@ -112,7 +112,7 @@ void low_loop()
     // float init_time = high_data.field15;
     // float elapsed_time_s = (hrt_absolute_time() - init_time)/1000000.0f;
 
-    float R = 22.5;
+    float R = aal_parameters.turn_radius;
 
     mission_phase_change = (phase_num != prev_phase_num);
     prev_phase_num = phase_num;
@@ -220,6 +220,7 @@ void low_loop()
     low_data.field12 = follow_done;
     low_data.field13 = path_done;
     low_data.field14 = mission_done;
+    low_data.field15 = aal_parameters.boundary_margin;
 
 
 }
@@ -283,7 +284,7 @@ Matrix R_z(float v){
 }
 
 bool circleOutOfBounds( twoDvec c, twoDvec z, twoDvec q, float R ){
-    return ( dot2D(subVecs2D(c,z),q) + R > 0.0f );
+    return ( dot2D(subVecs2D(c,z),q) + R + aal_parameters.boundary_margin > 0.0f );
 }
 
 bool circleOutOfAnyBounds(twoDvec c, float R){
@@ -324,10 +325,10 @@ void findDubinsParams( waypoint S, waypoint E, float R, dubinsParams* output ){
                     mulMxVec2D(R_z(-PI/2.0f),
                             makeTwoDvec(cosf(psie),sinf(psie) ) )));
 
-    bool crs_oob = circleOutOfAnyBounds(crs,R+3.0f);
-    bool cls_oob = circleOutOfAnyBounds(cls,R+3.0f);
-    bool cre_oob = circleOutOfAnyBounds(cre,R+3.0f);
-    bool cle_oob = circleOutOfAnyBounds(cle,R+3.0f);
+    bool crs_oob = circleOutOfAnyBounds(crs,R);
+    bool cls_oob = circleOutOfAnyBounds(cls,R);
+    bool cre_oob = circleOutOfAnyBounds(cre,R);
+    bool cle_oob = circleOutOfAnyBounds(cle,R);
 
     // Compute L1
     twoDvec line = subVecs2D(cre, crs);
