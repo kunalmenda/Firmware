@@ -109,6 +109,7 @@ struct waypointParams{
 struct waypoint{
         twoDvec xy;
         float heading;
+        float radius;
 };
 
 twoDvec mulMxVec2D(Matrix, twoDvec);
@@ -140,6 +141,8 @@ void followWaypointsDubins(dubinsParams, twoDvec, float, int*, bool*, waypointPa
 void applyBestHeadings(waypoint [], int);
 
 void shortestDubinsPath(waypoint [], float, int, float);
+
+bool reachedWaypoint(twoDvec, waypoint);
 
 
 

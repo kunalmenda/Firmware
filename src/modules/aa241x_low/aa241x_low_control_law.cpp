@@ -88,7 +88,6 @@ int mission_ctr = 0;
 waypoint* P;
 int num_waypoints = 0;
 
-
 uint64_t miss_start_time;
 
 int prev_phase_num = -100;
@@ -145,12 +144,15 @@ void low_loop()
 
         // set up waypoints
         P[0].xy = makeTwoDvec(position_N, position_E);
+        P[0].radius = 0.0f;
         for(int i=0; i<num_waypoints; i++){
             //P[i+1].xy = makeTwoDvec(mission_N[mission_ctr][i],mission_E[mission_ctr][i]);
             P[i+1].xy = makeTwoDvec(plume_N[i],plume_E[i]);
+            P[i+1].radius = plume_radius[i];
         }
 
         P[num_waypoints+1].xy = makeTwoDvec(10.0f, -60.0f); // loiter location 
+        P[num_waypoints+1].radius = 0.0f;
 
         P[0].heading = yaw;
         applyBestHeadings(P,num_waypoints+2);
@@ -174,6 +176,10 @@ void low_loop()
         findDubinsParams(P[P_ind-1],P[P_ind],R,&dbParams);
         twoDvec pos = makeTwoDvec(position_N, position_E);
         followWaypointsDubins(dbParams, pos, R, &follow_state, &follow_done, &wpParams);
+        if(reachedWaypoint(pos, P[P_ind])){
+            follow_done = true;
+            follow_state = 1;
+        }
     }
 
     if(follow_done){
@@ -639,4 +645,6 @@ void shortestDubinsPath(waypoint P_[], float R, int n, float vel) {
 
 }
 
-
+bool reachedWaypoint(twoDvec pos, waypoint wP){
+    return norm2D( subVecs2D(pos, wP.xy) ) < wP.radius;
+}
