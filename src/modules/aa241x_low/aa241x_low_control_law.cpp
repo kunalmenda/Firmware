@@ -93,6 +93,8 @@ uint64_t miss_start_time;
 int prev_phase_num = -100;
 bool mission_phase_change = false;
 
+bool fencing = false;
+
 
 /**
  * Main function in which your code should be written.
@@ -302,7 +304,7 @@ bool circleOutOfAnyBounds(twoDvec c, float R){
     for(int i = 0; i<4; i++){
         oob = oob || circleOutOfBounds(c,z_boundaries[i],q_boundaries[i], R);
     }
-    return oob;
+    return oob && fencing;
 
 }
 
